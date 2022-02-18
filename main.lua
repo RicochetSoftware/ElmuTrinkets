@@ -156,14 +156,14 @@ end
 
 -- Equip an item using ItemRack
 local function EquipItem(index, itemId, mouseButton) --fuck itemrack why does it use item id!! what if i have 2 mortars, 1 empty??????
-    -- can be "RightButton"
+    -- can be "RightButton" or "LeftButton"
     mouseButton = mouseButton or "LeftButton"
-    local btn = ItemRack.CreateMenuButton(1, itemId)
-    ItemRack.Menu[btn:GetID()] = itemId
-    ItemRack.MenuOnClick(btn, mouseButton)
 
     local btnFrame = ButtonFrames[index]
-    CooldownFrame_Set(btnFrame.CooldownFrame, 0, 0)
+    local itemRackID = ItemRack.GetID(btnFrame.bagIndex, btnFrame.bagSlot)
+    local btn = ItemRack.CreateMenuButton(1, itemRackID)
+    ItemRack.Menu[btn:GetID()] = itemRackID
+    ItemRack.MenuOnClick(btn, mouseButton)
 end
 
 -- returns an array of trinkets and their data
@@ -224,6 +224,8 @@ local function SetTrinketForButtonFrame(index, bag, slot)
     -- set variables on button frame
     btnFrame.itemId = itemId
     btnFrame.trinketIconTexture = texture
+    btnFrame.bagIndex = bag
+    btnFrame.bagSlot = slot
 
     btnFrame:SetScript("OnClick", function(self, button, down)
         local btn = ItemRack.CreateMenuButton(1, itemId)
