@@ -1,7 +1,7 @@
 ## Interface: 11402
 ## Title: ElmuTrinkets
 ## Notes: elmu test
-## Version: 0.1
+## Version: 1.0
 ## Dependencies: ItemRack
 ## SavedVariables: ElmuTrinketsDB
 
