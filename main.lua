@@ -11,7 +11,7 @@ local optionsFrame
 local iconTextureCache = {}
 
 -- enable debug prints
-local DEBUG = true
+local DEBUG = false
 
 local options = {
     type = "group",
