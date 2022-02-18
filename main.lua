@@ -41,36 +41,49 @@ local options = {
             name = "Show Tooltip",
             desc = "Show tooltips on hover",
             type = "toggle",
-            get = function(info)  return db.char.ShowTooltip end,
-            set = function(info, val)  db.char.ShowTooltip = val end
+            get = function(info) return db.char.ShowTooltip end,
+            set = function(info, val) db.char.ShowTooltip = val end
         },
         padding = {
             order = 150,
             name = "Padding",
             desc = "Padding between trinket buttons",
             type = "input",
-            get = function(info)  return tonumber(db.char.Padding) end,
-            set = function(info, val)  db.char.Padding = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Padding)
+            end,
+            set = function(info, val)
+                db.char.Padding = tonumber(val)
+            end
         },
         size = {
             order = 160,
             name = "Size",
             desc = "Size of trinket buttons",
             type = "input",
-            get = function(info)  return tonumber(db.char.Size) end,
-            set = function(info, val)  db.char.Size = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Size)
+            end,
+            set = function(info, val)
+                db.char.Size = tonumber(val)
+            end
         },
         rows = {
             order = 170,
             name = "Rows",
             desc = "How many rows of trinkets to show",
             type = "input",
-            get = function(info)  return tonumber(db.char.Rows) end,
-            set = function(info, val)  db.char.Rows = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Rows)
+            end,
+            set = function(info, val)
+                db.char.Rows = tonumber(val)
+            end
         },
 
     }
 }
+
 local defaults = {
     char = {
         RelativePt = "CENTER",
@@ -83,6 +96,7 @@ local defaults = {
         Rows = 3,
     }
 }
+
 local function DebugPrint(format, ...)
     if DEBUG then
         local args = {...}
