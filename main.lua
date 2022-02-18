@@ -41,36 +41,52 @@ local options = {
             name = "Show Tooltip",
             desc = "Show tooltips on hover",
             type = "toggle",
-            get = function(info)  return db.char.ShowTooltip end,
-            set = function(info, val)  db.char.ShowTooltip = val end
+            get = function(info) return db.char.ShowTooltip end,
+            set = function(info, val) db.char.ShowTooltip = val end
         },
         padding = {
             order = 150,
             name = "Padding",
             desc = "Padding between trinket buttons",
             type = "input",
-            get = function(info)  return db.char.Padding end,
-            set = function(info, val)  db.char.Padding = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Padding)
+            end,
+            set = function(info, val)
+                db.char.Padding = tonumber(val)
+                RedrawTrinketButtonPositions()
+            end
         },
         size = {
             order = 160,
             name = "Size",
             desc = "Size of trinket buttons",
             type = "input",
-            get = function(info) return db.char.Size end,
-            set = function(info, val)  db.char.Size = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Size)
+            end,
+            set = function(info, val)
+                db.char.Size = tonumber(val)
+                RedrawTrinketButtonPositions()
+            end
         },
         rows = {
             order = 170,
             name = "Rows",
             desc = "How many rows of trinkets to show",
             type = "input",
-            get = function(info)  return db.char.Rows end,
-            set = function(info, val)  db.char.Rows = tonumber(val) end
+            get = function(info)
+                return tostring(db.char.Rows)
+            end,
+            set = function(info, val)
+                db.char.Rows = tonumber(val)
+                RedrawTrinketButtonPositions()
+            end
         },
 
     }
 }
+
 local defaults = {
     char = {
         RelativePt = "CENTER",
@@ -83,6 +99,7 @@ local defaults = {
         Rows = 3,
     }
 }
+
 local function DebugPrint(format, ...)
     if DEBUG then
         local args = {...}
@@ -206,6 +223,7 @@ local function SetTrinketForButtonFrame(index, bag, slot)
 
     -- set variables on button frame
     btnFrame.itemId = itemId
+    btnFrame.trinketIconTexture = texture
 
     btnFrame:SetScript("OnClick", function(self, button, down)
         local btn = ItemRack.CreateMenuButton(1, itemId)
@@ -274,8 +292,32 @@ local function CreateTrinketButtons()
     end
 end
 
+-- Call when settings change (padding, rows, size) to reposition the current frames
+function RedrawTrinketButtonPositions()
+    local x = -db.char.Padding
+    local y = -db.char.Padding
+    
+    for i = 1, TRINKET_BUTTON_FRAME_COUNT do
+        local btnFrame = ButtonFrames[i]
 
+        -- Update the size of texture and cooldown frame
+        if btnFrame.trinketIconTexture then
+            btnFrame.trinketIconTexture:SetAllPoints(btnFrame)
+        end
 
+        if btnFrame.CooldownFrame then
+            btnFrame.CooldownFrame:SetAllPoints()
+        end
+
+        btnFrame:SetPoint("CENTER", x - 25, y - 50)
+        --DebugPrint("%d, %d", x, y)
+        x = x + db.char.Size + db.char.Padding
+        if x >= db.char.Size * db.char.Rows then
+            x = -db.char.Padding
+            y = y + db.char.Size + db.char.Padding
+        end
+    end
+end
 
 function Addon:OnInitialize()
     Addon:Print("Initialized addon")
