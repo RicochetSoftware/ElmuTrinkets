@@ -49,7 +49,7 @@ local options = {
             name = "Padding",
             desc = "Padding between trinket buttons",
             type = "input",
-            get = function(info)  return tonumber(db.char.Padding) end,
+            get = function(info)  return db.char.Padding end,
             set = function(info, val)  db.char.Padding = tonumber(val) end
         },
         size = {
@@ -57,7 +57,7 @@ local options = {
             name = "Size",
             desc = "Size of trinket buttons",
             type = "input",
-            get = function(info)  return tonumber(db.char.Size) end,
+            get = function(info) return db.char.Size end,
             set = function(info, val)  db.char.Size = tonumber(val) end
         },
         rows = {
@@ -65,7 +65,7 @@ local options = {
             name = "Rows",
             desc = "How many rows of trinkets to show",
             type = "input",
-            get = function(info)  return tonumber(db.char.Rows) end,
+            get = function(info)  return db.char.Rows end,
             set = function(info, val)  db.char.Rows = tonumber(val) end
         },
 
