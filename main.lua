@@ -3,20 +3,86 @@ local backgroundFrame
 
 -- array of buttons
 local ButtonFrames = {}
-
-local pad = 2 --padding between buttons
-local size = 25 --button size
-local row = 3 --# of trinkets per row
-
+local db
 -- How many trinket button frames to create
 local TRINKET_BUTTON_FRAME_COUNT = 30
-
+local optionsFrame
 -- map of item id to texture
 local iconTextureCache = {}
 
 -- enable debug prints
-local DEBUG = false
+local DEBUG = true
 
+local options = {
+    type = "group",
+    args = {
+        section = {
+            order = 99,
+            type = "header",
+            name = "Settings",
+        },
+        toggle = {
+            order = 100,
+            name = "Toggle Frame Movable",
+            desc = "Unlock/Lock the trinket frame",
+            type = "toggle",
+            get = function(info)  return db.char.Movable end,
+            set = function(info, val)
+                db.char.Movable = val
+                if val then
+                    UnlockFrame()
+                else
+                    LockFrame()
+                end
+            end
+        },
+        tooltip = {
+            order = 110,
+            name = "Show Tooltip",
+            desc = "Show tooltips on hover",
+            type = "toggle",
+            get = function(info)  return db.char.ShowTooltip end,
+            set = function(info, val)  db.char.ShowTooltip = val end
+        },
+        padding = {
+            order = 150,
+            name = "Padding",
+            desc = "Padding between trinket buttons",
+            type = "input",
+            get = function(info)  return tonumber(db.char.Padding) end,
+            set = function(info, val)  db.char.Padding = tonumber(val) end
+        },
+        size = {
+            order = 160,
+            name = "Size",
+            desc = "Size of trinket buttons",
+            type = "input",
+            get = function(info)  return tonumber(db.char.Size) end,
+            set = function(info, val)  db.char.Size = tonumber(val) end
+        },
+        rows = {
+            order = 170,
+            name = "Rows",
+            desc = "How many rows of trinkets to show",
+            type = "input",
+            get = function(info)  return tonumber(db.char.Rows) end,
+            set = function(info, val)  db.char.Rows = tonumber(val) end
+        },
+
+    }
+}
+local defaults = {
+    char = {
+        RelativePt = "CENTER",
+        PosX = 0,
+        PosY = 0,
+        ShowTooltip = true,
+        Movable = false,
+        Padding = 2,
+        Size = 25,
+        Rows = 3,
+    }
+}
 local function DebugPrint(format, ...)
     if DEBUG then
         local args = {...}
@@ -27,6 +93,26 @@ local function DebugPrint(format, ...)
             Addon:Printf(format, ...)
         end
     end
+end
+
+function UnlockFrame()
+    backgroundFrame.texture:SetColorTexture(0.2, 0.2, 0.2, 0.3)
+    DebugPrint("Unlocked frame")
+    backgroundFrame:EnableMouse(true)
+    backgroundFrame:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
+    backgroundFrame:SetMovable(true)
+end
+
+function LockFrame()
+    backgroundFrame.texture:SetColorTexture(0.2, 0.2, 0.2, 0)
+    DebugPrint("Locked frame")
+    backgroundFrame:EnableMouse(false)
+    backgroundFrame:SetMovable(false)
+    _, _, relPt, xOfs, yOfs = backgroundFrame:GetPoint()
+    db.char.PosX = xOfs
+    db.char.PosY = yOfs
+    db.char.RelativePt = relPt
+    DebugPrint("saving frame at %d %s", xOfs, yOfs)
 end
 
 local function GetOrCreateTexture(b, itemId)
@@ -40,8 +126,8 @@ local function GetOrCreateTexture(b, itemId)
 
     local frameName = b:GetName()
     local t = b:CreateTexture(frameName.."Icon","BACKGROUND",nil,-6)
-    t:SetWidth(size)
-    t:SetHeight(size)
+    t:SetWidth(db.char.Size)
+    t:SetHeight(db.char.Size)
 
     iconTextureCache[itemId] = {
         texture = t,
@@ -52,7 +138,7 @@ local function GetOrCreateTexture(b, itemId)
 end
 
 -- Equip an item using ItemRack
-local function EquipItem(index, itemId, mouseButton)
+local function EquipItem(index, itemId, mouseButton) --fuck itemrack why does it use item id!! what if i have 2 mortars, 1 empty??????
     -- can be "RightButton"
     mouseButton = mouseButton or "LeftButton"
     local btn = ItemRack.CreateMenuButton(1, itemId)
@@ -102,7 +188,7 @@ end
 
 -- Sets the trinket icon, cooldown and data for a button frame index
 local function SetTrinketForButtonFrame(index, bag, slot)
-    DebugPrint("Setting trinket for button frame %s", index)
+    --DebugPrint("Setting trinket for button frame %s", index)
     local btnFrame = ButtonFrames[index]
     local _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(bag, slot)
 
@@ -110,7 +196,7 @@ local function SetTrinketForButtonFrame(index, bag, slot)
     texture:SetTexture(textureId)
     texture:SetAllPoints(btnFrame) -- make texture same size as button
 
-    btnFrame:SetSize(size, size)
+    btnFrame:SetSize(db.char.Size, db.char.Size)
     btnFrame:SetFrameStrata("HIGH")
     btnFrame:RegisterForClicks("AnyUp")
 
@@ -127,9 +213,11 @@ local function SetTrinketForButtonFrame(index, bag, slot)
     end)
 
     btnFrame:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(backgroundFrame, "ANCHOR_TOPRIGHT")
-        GameTooltip:SetBagItem(bag, slot)
-        GameTooltip:Show()
+        if db.char.ShowTooltip then
+            GameTooltip:SetOwner(btnFrame, "ANCHOR_TOPRIGHT")
+            GameTooltip:SetBagItem(bag, slot)
+            GameTooltip:Show()
+        end
     end)
 
     btnFrame:SetScript("OnLeave", function(self)
@@ -146,7 +234,7 @@ local function UpdateAllButtonFrames()
     for i = 1, TRINKET_BUTTON_FRAME_COUNT do
         local btnFrame = ButtonFrames[i]
         if i > #trinkets then
-            -- btnFrame:Hide()
+            btnFrame:Hide()
         else
             local trinketData = trinkets[i]
             SetTrinketForButtonFrame(i, trinketData.Bag, trinketData.Slot)
@@ -158,15 +246,15 @@ end
 
 -- This creates the initial slots for trinkets, should only be called once
 local function CreateTrinketButtons()
-    local x = -pad
-    local y = -pad
+    local x = -db.char.Padding
+    local y = -db.char.Padding
 
     for i = 1, TRINKET_BUTTON_FRAME_COUNT do
         local btnFrame = CreateFrame("CheckButton", "ElmuTrinketButton"..i, backgroundFrame, "SecureActionButtonTemplate")
         local frameName = btnFrame:GetName()
-        DebugPrint("Creating new trinket frame, name: %s ", frameName)
+        --DebugPrint("Creating new trinket frame, name: %s ", frameName)
 
-        btnFrame:SetSize(size, size)
+        btnFrame:SetSize(db.char.Size, db.char.Size)
         btnFrame:SetFrameStrata("HIGH")
 
         -- Create cooldown frame
@@ -176,30 +264,56 @@ local function CreateTrinketButtons()
 
         table.insert(ButtonFrames, btnFrame)
 
-        btnFrame:SetPoint("CENTER", x, y)
-        x = x + size + pad
-        if x >= size * row then
-            x = -pad
-            y = y + size + pad
-            DebugPrint("%d, %d", x, y)
+        btnFrame:SetPoint("CENTER", x - 25, y - 50)
+        --DebugPrint("%d, %d", x, y)
+        x = x + db.char.Size + db.char.Padding
+        if x >= db.char.Size * db.char.Rows then
+            x = -db.char.Padding
+            y = y + db.char.Size + db.char.Padding
         end
     end
 end
 
+
+
+
 function Addon:OnInitialize()
     Addon:Print("Initialized addon")
+    db = LibStub("AceDB-3.0"):New("ElmuTrinketsDB", defaults)
+    optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ElmuTrinkets", "ElmuTrinkets")
 end
 
 function Addon:OnEnable()
     Addon:Print("Enabled addon")
 
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("ElmuTrinkets", options, nil)
+
     -- Needed for ItemRack to work
     ItemRack.menuOpen = 13
 
     backgroundFrame = CreateFrame("Button", "ElmuRackFrame", UIParent)
+    backgroundFrame:SetFrameStrata("BACKGROUND")
     backgroundFrame:EnableMouse(false)
-    backgroundFrame:SetPoint("CENTER", 500, 0)
-    backgroundFrame:SetSize(200, 300)
+    DebugPrint("loading frame at %d %s", db.char.PosX, db.char.PosY)
+    backgroundFrame:SetPoint(db.char.RelativePt, db.char.PosX, db.char.PosY)
+    backgroundFrame:SetSize(100, 200)
+
+    backgroundFrame.texture = backgroundFrame:CreateTexture(nil,"BACKGROUND")
+    backgroundFrame.texture:SetAllPoints(backgroundFrame)
+    backgroundFrame.texture:SetColorTexture(0.2, 0.2, 0.2, 0)
+
+    --backgroundFrame:Hide()
+
+    backgroundFrame:SetScript("OnMouseDown", function(self)
+        if db.char.Movable then
+            backgroundFrame:StartMoving()
+        end
+    end)
+    backgroundFrame:SetScript("OnMouseUp", function(self)
+        if db.char.Movable then
+            backgroundFrame:StopMovingOrSizing()
+        end
+    end)
 
     -- Create the frames
     CreateTrinketButtons()
