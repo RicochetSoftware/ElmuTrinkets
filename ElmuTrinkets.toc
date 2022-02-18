@@ -2,7 +2,7 @@
 ## Title: ElmuTrinkets
 ## Notes: elmu test
 ## Version: 0.1
-## Dependencies: ItemRack, OmniCC
+## Dependencies: ItemRack
 ## SavedVariables: ElmuTrinketsDB
 
 embeds.xml
